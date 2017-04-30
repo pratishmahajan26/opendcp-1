@@ -254,13 +254,13 @@ int opendcp_image_readline_float(opendcp_image_t *image, int y, unsigned char *d
         int pixel1_r = (int)4095*image->component[2].float_data[i+1];
         /* put pixel data in dbuffer */
         dbuffer[d + 0] = pixel0_b >> 4;
-        dbuffer[d + 1] = (pixel0_b & 0x0f) << 4 ) | ((pixel0_g >> 8) & 0x0f);
+        dbuffer[d + 1] = ((pixel0_b & 0x0f) << 4 ) | ((pixel0_g >> 8) & 0x0f);
         dbuffer[d + 2] = pixel0_g;
         dbuffer[d + 3] = pixel0_r >> 4;
-        dbuffer[d + 4] = (pixel0_r & 0x0f) << 4 ) | ((pixel1_b >> 8) & 0x0f);
+        dbuffer[d + 4] = ((pixel0_r & 0x0f) << 4 ) | ((pixel1_b >> 8) & 0x0f);
         dbuffer[d + 5] = pixel1_b;
         dbuffer[d + 6] = (pixel1_g >> 4);
-        dbuffer[d + 7] = (pixel1_g << 4 ) | (pixel1_r >> 8) & 0x0f);
+        dbuffer[d + 7] = (pixel1_g << 4 ) | ((pixel1_r >> 8) & 0x0f);
         dbuffer[d + 8] = pixel1_r;
         d += 9;
     }
@@ -373,7 +373,7 @@ int adjust_headroom(int p) {
 }
 
 /* dci transfer (int data) */
-int dci_transfer(float p) {
+int dci_transfer_float(float p) {
     int v;
 
     v = (pow((p * DCI_COEFFICENT), DCI_DEGAMMA) * COLOR_DEPTH);
@@ -402,7 +402,7 @@ int dci_transfer_inverse(float p) {
 }
 
 /* dci transfer inverse (float data) */
-float dci_transfer_inverse(float p) {
+float dci_transfer_inverse_float(float p) {
 
     return (pow(p, 1 / DCI_GAMMA));
 }
@@ -769,7 +769,7 @@ int resize_float(opendcp_image_t **image, int profile, int method) {
     OPENDCP_LOG(LOG_INFO, "resizing from %dx%d to %dx%d (%f) (float data)", ptr->w, ptr->h, w, h, aspect);
 
     /* create the image */
-    opendcp_image_t *d_image = opendcp_image_create_float(num_components, w, h);
+    opendcp_image_t *d_image = opendcp_image_float_create(num_components, w, h);
 
     if (!d_image) {
         return -1;

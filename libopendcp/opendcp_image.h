@@ -72,6 +72,7 @@ int  rgb_to_xyz(opendcp_image_t *image, int gamma, int method);
 int  resize(opendcp_image_t **image, int profile, int method);
 rgb_pixel_float_t yuv444toRGB888(int y, int cb, int cr);
 opendcp_image_t *opendcp_image_create(int n_components, int w, int h);
+opendcp_image_t *opendcp_image_float_create(int n_components, int w, int h);
 
 #ifdef __cplusplus
 }

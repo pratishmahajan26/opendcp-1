@@ -47,6 +47,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <zlib.h>
 #include "opendcp.h"
 #include "opendcp_image.h"
 
@@ -58,11 +59,11 @@ typedef enum {
     EXR_COMPRESSION_ZIPS     = 2,          /* zip single line (not supported) */
     EXR_COMPRESSION_ZIP      = 3,          /* zip 16 lines                    */
     EXR_COMPRESSION_PIZ      = 4,          /* piz (not supported)             */
-    EXR_COMPRESSION_PXR24    = 5           /* pixar 24 bit (not supported)    */
-    EXR_COMPRESSION_B44      = 6           /* b44 (not supported)             */
-    EXR_COMPRESSION_B44A     = 7           /* b44a (not supported)            */
-    EXR_COMPRESSION_DWAA     = 8            /* dwaa 32 lines (not supported)  */
-    EXR_COMPRESSION_DWAB     = 9            /* dwab 256 lines (not supported) */
+    EXR_COMPRESSION_PXR24    = 5,          /* pixar 24 bit (not supported)    */
+    EXR_COMPRESSION_B44      = 6,          /* b44 (not supported)             */
+    EXR_COMPRESSION_B44A     = 7,          /* b44a (not supported)            */
+    EXR_COMPRESSION_DWAA     = 8,          /* dwaa 32 lines (not supported)  */
+    EXR_COMPRESSION_DWAB     = 9,          /* dwab 256 lines (not supported) */
 } exr_compression_enum;
 
 typedef enum {
@@ -99,6 +100,7 @@ typedef struct {
     exr_channel_list channel_list;    /* channel list */
     unsigned char compression;        /* compression */
     exr_window dataWindow;            /* data window */
+    exr_window displayWindow;         /* display window */
 } exr_attributes;
 
 /* exr chunk data */
@@ -254,7 +256,7 @@ exr_channel_list read_channel_data( FILE *exr_fp) {
 
          if( find_channel ) {
             // ---- read channel data type
-            channel.data_type = fgetc( exr_fp );
+            channel.dataType = fgetc( exr_fp );
             fgetc( exr_fp );
             fgetc( exr_fp );
             fgetc( exr_fp );
@@ -275,7 +277,7 @@ exr_channel_list read_channel_data( FILE *exr_fp) {
             fgetc( exr_fp );
             // ---- offset
             channel.offset = offset;
-            if( channel.data_type == EXR_HALF) {
+            if( channel.dataType == EXR_HALF) {
                offset += 2;
                channel_list.data_width += 2;
             }
@@ -598,17 +600,17 @@ void read_data_compression_no( FILE *exr_fp, exr_chunk_data *chunk_data, exr_att
       fread( data_buffer, 1, data_length, exr_fp );
 
       // ---- copy data from buffer
-      if( attributes->channel_list.channel[0].data_type == EXR_HALF )
+      if( attributes->channel_list.channel[0].dataType == EXR_HALF )
          copy_half_data( data_buffer, image_data->channel_b, 1, num_columns, row_number, &(attributes->channel_list.channel[0]) );
       else
          copy_float_data( data_buffer, image_data->channel_b, 1, num_columns, row_number, &(attributes->channel_list.channel[0]) );
 
-      if( attributes->channel_list.channel[1].data_type == EXR_HALF )
+      if( attributes->channel_list.channel[1].dataType == EXR_HALF )
          copy_half_data( data_buffer, image_data->channel_g, 1, num_columns, row_number, &(attributes->channel_list.channel[1]) );
       else
          copy_float_data( data_buffer, image_data->channel_g, 1, num_columns, row_number, &(attributes->channel_list.channel[1]) );
 
-      if( attributes->channel_list.channel[2].data_type == EXR_HALF )
+      if( attributes->channel_list.channel[2].dataType == EXR_HALF )
          copy_half_data( data_buffer, image_data->channel_r, 1, num_columns, row_number, &(attributes->channel_list.channel[2]) );
       else
          copy_float_data( data_buffer, image_data->channel_r, 1, num_columns, row_number, &(attributes->channel_list.channel[2]) );
@@ -654,17 +656,17 @@ void read_data_compression_rle( FILE *exr_fp, exr_chunk_data *chunk_data, exr_at
       unfilter_buffer( uncompressed_buffer, unfiltered_buffer, uncompressed_data_length );
 
       // ---- copy data from buffer
-      if( attributes->channel_list.channel[0].data_type == EXR_HALF )
+      if( attributes->channel_list.channel[0].dataType == EXR_HALF )
          copy_half_data( unfiltered_buffer, image_data->channel_b, 1, num_columns, row_number, &(attributes->channel_list.channel[0]) );
       else
          copy_float_data( unfiltered_buffer, image_data->channel_b, 1, num_columns, row_number, &(attributes->channel_list.channel[0]) );
 
-      if( attributes->channel_list.channel[1].data_type == EXR_HALF )
+      if( attributes->channel_list.channel[1].dataType == EXR_HALF )
          copy_half_data( unfiltered_buffer, image_data->channel_g, 1, num_columns, row_number, &(attributes->channel_list.channel[1]) );
       else
          copy_float_data( unfiltered_buffer, image_data->channel_g, 1, num_columns, row_number, &(attributes->channel_list.channel[1]) );
 
-      if( attributes->channel_list.channel[2].data_type == EXR_HALF )
+      if( attributes->channel_list.channel[2].dataType == EXR_HALF )
          copy_half_data( unfiltered_buffer, image_data->channel_r, 1, num_columns, row_number, &(attributes->channel_list.channel[2]) );
       else
          copy_float_data( unfiltered_buffer, image_data->channel_r, 1, num_columns, row_number, &(attributes->channel_list.channel[2]) );
@@ -735,17 +737,17 @@ void read_data_compression_zip( FILE *exr_fp, exr_chunk_data *chunk_data, exr_at
       unfilter_buffer( uncompressed_buffer, unfiltered_buffer, uncompressed_data_length );
 
       // ---- copy data from buffer
-      if( attributes->channel_list.channel[0].data_type == EXR_HALF )
+      if( attributes->channel_list.channel[0].dataType == EXR_HALF )
          copy_half_data( unfiltered_buffer, image_data->channel_b, num_rows, num_columns, row_number, &(attributes->channel_list.channel[0]) );
       else
          copy_float_data( unfiltered_buffer, image_data->channel_b, num_rows, num_columns, row_number, &(attributes->channel_list.channel[0]) );
 
-      if( attributes->channel_list.channel[1].data_type == EXR_HALF )
+      if( attributes->channel_list.channel[1].dataType == EXR_HALF )
          copy_half_data( unfiltered_buffer, image_data->channel_g, num_rows, num_columns, row_number, &(attributes->channel_list.channel[1]) );
       else
          copy_float_data( unfiltered_buffer, image_data->channel_g, num_rows, num_columns, row_number, &(attributes->channel_list.channel[1]) );
 
-      if( attributes->channel_list.channel[2].data_type == EXR_HALF )
+      if( attributes->channel_list.channel[2].dataType == EXR_HALF )
          copy_half_data( unfiltered_buffer, image_data->channel_r, num_rows, num_columns, row_number, &(attributes->channel_list.channel[2]) );
       else
          copy_float_data( unfiltered_buffer, image_data->channel_r, num_rows, num_columns, row_number, &(attributes->channel_list.channel[2]) );
@@ -785,7 +787,7 @@ int opendcp_decode_exr(opendcp_image_t **image_ptr, const char *sfile) {
    magicNumber |= fgetc(exr_fp) << 8;
    magicNumber |= fgetc(exr_fp);
     
-   if (readsize != MAGIC_NUMBER_EXR ) {
+   if (magicNumber != MAGIC_NUMBER_EXR ) {
       OPENDCP_LOG(LOG_ERROR,"%-15.15s: failed to read magic number expected 0x%08x read 0x%08x","read_exr", MAGIC_NUMBER_EXR, magicNumber );
       OPENDCP_LOG(LOG_ERROR,"%s is not a valid EXR file", sfile);
       return OPENDCP_FATAL;
@@ -810,7 +812,7 @@ int opendcp_decode_exr(opendcp_image_t **image_ptr, const char *sfile) {
    fgetc(exr_fp);
 
    // ---- read EXR attritubes need for dcp
-   exr_attributes attritbute = read_attributes( exr_fp );
+   exr_attributes attributes = read_attributes( exr_fp );
    
    // ---- check compression
    if( attributes.compression > EXR_COMPRESSION_ZIP ) {
@@ -848,10 +850,10 @@ int opendcp_decode_exr(opendcp_image_t **image_ptr, const char *sfile) {
    fclose( exr_fp );
  
     /* create the image (float data) */
-   image = opendcp_image_create_float(3, image_data.width, mage_data.height);
+   opendcp_image_t *image = opendcp_image_float_create(3, image_data.width, image_data.height);
   
-   unsigned int image_size = image_data.width * mage_data.height;
-   for (index = 0; index < image_size; index++) {
+   unsigned int image_size = image_data.width * image_data.height;
+   for (unsigned int index = 0; index < image_size; index++) {
     // ---- need copy float data from exr image data to float opendcp image data
       // ----- correct channel order?
       image->component[0].float_data[index] = image_data.channel_b[index];
