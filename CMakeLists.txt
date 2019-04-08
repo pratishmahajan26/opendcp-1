@@ -31,11 +31,7 @@ OPTION(DEB             "Create DEB package" OFF)
 #-------------------------------------------------------------------------------
 
 #--check 32 or 64-bit-----------------------------------------------------------
-IF(CMAKE_SIZEOF_VOID_P MATCHES "8")
     SET(HOST_ARCH x86_64)
-ELSE()
-    SET(HOST_ARCH i686)
-ENDIF()
 SET(TARGET_ARCH ${HOST_ARCH})
 #-------------------------------------------------------------------------------
 
@@ -84,13 +80,7 @@ SET(PREFIX_ARG --prefix=${PREFIX})
 #-------------------------------------------------------------------------------
 
 #--inlcude os specific----------------------------------------------------------
-IF (APPLE)
     INCLUDE("toolchains/osx.cmake")
-ELSEIF(WIN32)
-    INCLUDE("toolchains/win32.cmake")
-ELSE()
-    INCLUDE("toolchains/linux.cmake")
-ENDIF()
 #-------------------------------------------------------------------------------
 
 MESSAGE(STATUS)

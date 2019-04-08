@@ -163,12 +163,12 @@ IF(COMPILE_TIFF)
     ENDIF()
     EXTERNALPROJECT_ADD(
         08_TIFF
-        URL ${URL}tiff-4.0.0.tar.gz
+        URL ${URL}tiff-4.0.10.tar.gz
         BUILD_IN_SOURCE 1
         PATCH_COMMAND patch -d <SOURCE_DIR> -p0 -t -N < ${PROJECT_SOURCE_DIR}/contrib/libtiff-4.0.0.patch
         CONFIGURE_COMMAND ${CONFIGURE} ${PREFIX_ARG} ${AUTO_CFLAGS} ${AUTO_CXXFLAGS} ${AUTO_LDFLAGS}
                           --disable-dependency-tracking --enable-static=yes --enable-shared=no
-                          --enable-jpeg=no
+                          --enable-jpeg=no --disable-zstd
         BUILD_COMMAND ${MAKE} -f <SOURCE_DIR>/Makefile
         INSTALL_COMMAND ${INSTALL} -f <SOURCE_DIR>/Makefile install ${INSTALL_DIR}
 )
